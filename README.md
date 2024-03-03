@@ -1,17 +1,6 @@
-# Guidance Title (required)
+# Guidance for programatic deployment of NDI Discovery Servers for Broadcast workflows on AWS
 
-The Guidance title should be consistent with the title established first in Alchemy.
-
-**Example:** *Guidance for Product Substitutions on AWS*
-
-This title correlates exactly to the Guidance it’s linked to, including its corresponding sample code repository. 
-
-
-## Table of Content (required)
-
-List the top-level sections of the README template, along with a hyperlink to the specific section.
-
-### Required
+## Table of Content
 
 1. [Overview](#overview-required)
     - [Cost](#cost)
@@ -22,181 +11,170 @@ List the top-level sections of the README template, along with a hyperlink to th
 5. [Running the Guidance](#running-the-guidance-required)
 6. [Next Steps](#next-steps-required)
 7. [Cleanup](#cleanup-required)
+8. [Notices](#notices-optional)
+10. [Additional Resources](#resources-optional)
+10. [Authors](#authors-optional)
 
-***Optional***
+## Overview 
 
-8. [FAQ, known issues, additional considerations, and limitations](#faq-known-issues-additional-considerations-and-limitations-optional)
-9. [Revisions](#revisions-optional)
-10. [Notices](#notices-optional)
-11. [Authors](#authors-optional)
+This sample, non-production-ready template describes a CloudFormation template to deploy the NDI DIscovery Servers on an existing VPC.
 
-## Overview (required)
+This pattern is designed for broadcasters requiring swift provisioning and dismantling of NDI environments for live production setups, utilizing the elasticity and flexibility of AWS infrastructure.
 
-1. Provide a brief overview explaining the what, why, or how of your Guidance. You can answer any one of the following to help you write this:
+AWS provides services that enable the creation, deployment and maintenance of infrastructure in a programmatic, descriptive, and declarative way and these services provide rigor, clarity, and reliability. AWS CloudFormation enables developers to create AWS resources in an orderly and predictable fashion. Resources are written in template files using JSON or YAML format. Then, CloudFormation reads the template and generates the stacks, that are deployed in a safe, repeatable manner.
 
-    - **Why did you build this Guidance?**
-    - **What problem does this Guidance solve?**
+NDI is a royalty-free protocol developed by NewTek (Vizrt) to enable video-compatible products to share video across a local area network (LAN). The NDI discovery service is designed to allow you to replace the automatic discovery NDI uses with a server that operates as a centralized registry of NDI sources.
 
-2. Include the architecture diagram image, as well as the steps explaining the high-level overview and flow of the architecture. 
-    - To add a screenshot, create an ‘assets/images’ folder in your repository and upload your screenshot to it. Then, using the relative file path, add it to your README. 
+This pattern provides a method to deploy the NDI Discovery Servers through a CloudFormation template presenting the required information for the deployment as input parameters on the template.
+
+We have chosen CloudFormation as the method of deployment over alternative approaches (like CDK) because it is the simplest level of abstraction of Infrastructure as a Code. It’s console driven and it handles the end to end life cycle: creating, updating and deleting the stack which you wouldn’t get from a Python or a CLI script. And last it leaves a visual point of reference in the console itself.
+
+When you launch an instance in Amazon EC2, you have the option of passing "User Data" to the instance that can be used to perform common automated configuration tasks and even run scripts after the instance starts. We are using the CloudFormation helper script cfn-init to install the NDI packages and start the "ndi-discovery" service. After this process we communicate back to CloudFormation the success of the installation using the cfn-signal helper script to finilise the deployment of the Stack.  
+
+The Instance Profile role associated to the EC2 instances have an AWS managed policy attached: "AmazonSSMManagedEC2InstanceDefaultPolicy". This allows AWS Systems Manager to manage your Amazon EC2 instances automatically as managed instances. The benefits of managing your instances with Systems Manager include the following:
+
+* Connect to your EC2 instances securely using Session Manager.
+* Perform automated patch scans using Patch Manager.
+* View detailed information about your instances using Systems Manager Inventory.
+* Track and manage instances using Fleet Manager.
+* Keep SSM Agent up to date automatically.
+
+The target audience includes **Broadcast** engineers or individuals with minimal AWS experience, as the template reduces the need for coding or scripting expertise. This template doesn't require any packaging process (upload local artifcats to an S3 bucket) and the CloudFormation template can easily be re-used and customized for various live production deployments.
+
+# Architecture
+
+## CloudFormation deployment:
+
+![Architecture Diagram](assets/architecture1.png "Architecture Diagram")
+
+Target technology stack:
+
+   * An Instance Profile 
+       - An IAM Policy
+       - An IAM Role 
+   * A Security Group 
+   * One or two EC2 instances
+   * A Route 53 hosted zone with the one or two A records  
+
+## Deployed EC2 Instances:
+
+![Architecture Diagram](assets/architecture2.png "Architecture Diagram")
+
 
 ### Cost
 
-This section is for a high-level cost estimate. Think of a likely straightforward scenario with reasonable assumptions based on the problem the Guidance is trying to solve. If applicable, provide an in-depth cost breakdown table in this section.
+You are responsible for the cost of the AWS services used while running this Guidance. As of Mars 2024, the cost for running this Guidance with the default settings in the US East (N. Virginia) is approximately $31.01 per month (on-demand) for each NDI Discovery Server (based on the t3.medium EC2 instances type) 
 
-Start this section with the following boilerplate text:
+## Prerequisites
 
-_You are responsible for the cost of the AWS services used while running this Guidance. As of <month> <year>, the cost for running this Guidance with the default settings in the <Default AWS Region (Most likely will be US East (N. Virginia)) > is approximately $<n.nn> per month for processing ( <nnnnn> records )._
+This AWS CloudFormation template will create an IAM Policy and an IAM Role that will be associated with the Instance Profile of the EC2 instances deployed. It also creates a Security Group associated to the instances. Last it also creates a Route 53 hosted zone and one A records per Instance. For that reason the credentials used when creating the CloudFormation stack will need to have sufficient privileges to create those resources.
 
-Replace this amount with the approximate cost for running your Guidance in the default Region. This estimate should be per month and for processing/serving resonable number of requests/entities.
+The EC2 instances will download the sofwtare from a public repository fron NDI (downloads.ndi.tv), that means that the EC2 instances needs to be able to connect to the Internet to access the files, either asigning a public IP and using an Internet Gateway or a NAT Gateway if the instances are deployed in private subnets. 
 
+Once deployed and as the EC2 instances are not launched with a Key Pair, Systems Manager is used to connect to them in case it's needed. This will require that the EC2 instances will be placed on a public subnet (using a public IP and the Internet Gateway) or in case the instances are deployed on private subnets then a NAT gateway or VPC endpoints are required to connect to the instances. 
 
-## Prerequisites (required)
+### Operating System
 
-### Operating System (required)
+The EC2 instances deployed will use the latest **<Amazon Linux 2 >** AMI available in the region selected for deployment.
 
-- Talk about the base Operating System (OS) and environment that can be used to run or deploy this Guidance, such as *Mac, Linux, or Windows*. Include all installable packages or modules required for the deployment. 
-- By default, assume Amazon Linux 2/Amazon Linux 2023 AMI as the base environment. All packages that are not available by default in AMI must be listed out.  Include the specific version number of the package or module.
+### Third-party tools
 
-**Example:**
-“These deployment instructions are optimized to best work on **<Amazon Linux 2 AMI>**.  Deployment in another OS may require additional steps.”
+The EC2 instances will download and install the NDI SDK for Linux from the url: https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v5_Linux.tar.gz
 
-- Include install commands for packages, if applicable.
+### AWS account requirements
 
+This deployment requires you have the policies needed to deploy the resources deployed by CloudFormation.
+This deployemnt requires an exisiting VPC with at less one Subnet to deploy the EC2 instance to host the Discovery Server (two Subnets if a redundant cofiguration is used)
 
-### Third-party tools (If applicable)
+## Deployment Steps
 
-*List any installable third-party tools required for deployment.*
+1. Clone the repo using command ```git clone aws-solutions-library-samples/guidance-for-programatic-deployment-of-NDI-Discovery-Servers```
+2. cd to the repo folder ```cd <guidance-for-programatic-deployment-of-NDI-Discovery-Servers>```
+3. Navigate to the deployment folder and download the CloudFormation template: "ec2-ndi-discovery-servers-deployment-template.yml
+4. Navigate to the CloudFormation console or use CLI and deploy the template either by manually upload it to an Amazon S3 bucket or if the template was uploaded before select the 'Amazon S3 URL'. 
+5. Fill up the parameters of the template
+6. Acknoledge the CloudFormation needed capabilities:
 
+![Steps](assets/capabilities.png "Steps")
 
-### AWS account requirements (If applicable)
+7. Wait until CloudFormation finishes deploying the different resources. Once deployed you can navigate to the outputs section and note down the private DNS names of the NDI Discovery Servers
 
-*List out pre-requisites required on the AWS account if applicable, this includes enabling AWS regions, requiring ACM certificate.*
+Please be aware that "termination protection" is enabled on the EC2 instances, if you want to delete the Stack you will need to disable the termination protection on the EC2 instances first.
 
-**Example:** “This deployment requires you have public ACM certificate available in your AWS account”
+## Deployment Validation 
 
-**Example resources:**
-- ACM certificate 
-- DNS record
-- S3 bucket
-- VPC
-- IAM role with specific permissions
-- Enabling a Region or service etc.
 
+* On the CloudFormation console the Stack status should be "_**CREATE_COMPLETE**_" 
+* If deployment is successful, you should be able to see one Instance per Subnet selected in the Resources tab, Type: "AWS::EC2::Instance"
+* You can click on each of the Instances and connect to it using SSM, select the Instance and hit "Connect" (You may need to wait few minutes until the Instances is available). Once connected with Session Manager run the following command: ``` systemctl status ndi-discovery.service ```. You should see an answer from the service being active (running): 
 
-### aws cdk bootstrap (if sample code has aws-cdk)
+![Steps](assets/service.png "Steps")
 
-<If using aws-cdk, include steps for account bootstrap for new cdk users.>
 
-**Example blurb:** “This Guidance uses aws-cdk. If you are using aws-cdk for first time, please perform the below bootstrapping....”
+## Running the Guidance
 
-### Service limits  (if applicable)
+This CloudFormation Template is built using parameters, please add the desired values for the different parameters:
 
-<Talk about any critical service limits that affect the regular functioning of the Guidance. If the Guidance requires service limit increase, include the service name, limit name and link to the service quotas page.>
+Instance Configuration:
 
-### Supported Regions (if applicable)
+* InstanceName: the name that will be given to the EC2 instances, followed by the subnet where the Instance is deployed. 
+* VolumeSize: the size of the EBS volume for the EC2 instances
+* InstanceType: type of the EC2 instances to be used for the deployment, there are two pre define values, if a different type is needed select "_other_"
+* InstanceTypeManual: in case a differnt type of EC2 instances is needed please set it up here.
+* AmiID: this parameter is populated by default with the value of the latest Linux2 AMI on the region, if an especific AMI is required this parameter could be modified.
 
-<If the Guidance is built for specific AWS Regions, or if the services used in the Guidance do not support all Regions, please specify the Region this Guidance is best suited for>
+VPC Configuration:
 
+* VpcId: the ID of the VPC where the Discovery Servers EC2 instances will be deployed. This information is used on the Security Group created by the template associated to the EC2 instances.
+* VpcCidr: this is the CIDR of the VPC where the discovery servers EC2 instances will be deployed, this information is used on the Security Group to specify the IP's allowed to communicate with the discovery servers  
+* SubnetIds: List of subnets to deploy to. An NDI discovery server will be deployed to each selected subnet. It is recommended to deploy two discovery servers placed in two different subnets for resilience.
 
-## Deployment Steps (required)
+Domain Settings:
 
-Deployment steps must be numbered, comprehensive, and usable to customers at any level of AWS expertise. The steps must include the precise commands to run, and describe the action it performs.
+* PrivateDnsName: name of the private domain to use for the NDI Discovery Servers endpoints. A new hosted zone will be created.
 
-* All steps must be numbered.
-* If the step requires manual actions from the AWS console, include a screenshot if possible.
-* The steps must start with the following command to clone the repo. ```git clone xxxxxxx```
-* If applicable, provide instructions to create the Python virtual environment, and installing the packages using ```requirement.txt```.
-* If applicable, provide instructions to capture the deployed resource ARN or ID using the CLI command (recommended), or console action.
+Business Tags:
 
- 
-**Example:**
+* Owner: this is a TAG that will be associated with the EC2 instances representing the Owner, it's not mandatory but it's best practises to follow a TAG policy when deploying resources on AWS.
 
-1. Clone the repo using command ```git clone xxxxxxxxxx```
-2. cd to the repo folder ```cd <repo-name>```
-3. Install packages in requirements using command ```pip install requirement.txt```
-4. Edit content of **file-name** and replace **s3-bucket** with the bucket name in your account.
-5. Run this command to deploy the stack ```cdk deploy``` 
-6. Capture the domain name created by running this CLI command ```aws apigateway ............```
 
+## Next Steps
 
+Once the Discovery Servers are deployed and are up and running you can use them to register your NDI sources. If you are using the NDI Tools you can set up the discovery servers under the _Access Manager: Advance Configuration_.
 
-## Deployment Validation  (required)
+Remember that NDI uses different protocols and ports for the NDI streams themselves, refer to the NDI Networking best practises to understand the allocation and create the Security Group for the NDI sender and receivers EC2 instances.     
 
-<Provide steps to validate a successful deployment, such as terminal output, verifying that the resource is created, status of the CloudFormation template, etc.>
+## Cleanup
 
+You can clean up all the resources deployed by simply deleteing the CloudFormation Stack. But as the option "termination protection" is enabled you will need to disable it before deleting the Stack. You can simply access each of the EC2 instances from the console and disable this option: "change termination protection"
 
-**Examples:**
+## Notices 
 
-* Open CloudFormation console and verify the status of the template with the name starting with xxxxxx.
-* If deployment is successful, you should see an active database instance with the name starting with <xxxxx> in        the RDS console.
-*  Run the following CLI command to validate the deployment: ```aws cloudformation describe xxxxxxxxxxxxx```
-
-
-
-## Running the Guidance (required)
-
-<Provide instructions to run the Guidance with the sample data or input provided, and interpret the output received.> 
-
-This section should include:
-
-* Guidance inputs
-* Commands to run
-* Expected output (provide screenshot if possible)
-* Output description
-
-
-
-## Next Steps (required)
-
-Provide suggestions and recommendations about how customers can modify the parameters and the components of the Guidance to further enhance it according to their requirements.
-
-
-## Cleanup (required)
-
-- Include detailed instructions, commands, and console actions to delete the deployed Guidance.
-- If the Guidance requires manual deletion of resources, such as the content of an S3 bucket, please specify.
-
-
-
-## FAQ, known issues, additional considerations, and limitations (optional)
-
-
-**Known issues (optional)**
-
-<If there are common known issues, or errors that can occur during the Guidance deployment, describe the issue and resolution steps here>
-
-
-**Additional considerations (if applicable)**
-
-<Include considerations the customer must know while using the Guidance, such as anti-patterns, or billing considerations.>
-
-**Examples:**
-
-- “This Guidance creates a public AWS bucket required for the use-case.”
-- “This Guidance created an Amazon SageMaker notebook that is billed per hour irrespective of usage.”
-- “This Guidance creates unauthenticated public API endpoints.”
-
-
-Provide a link to the *GitHub issues page* for users to provide feedback.
-
-
-**Example:** *“For any feedback, questions, or suggestions, please use the issues tab under this repo.”*
-
-## Revisions (optional)
-
-Document all notable changes to this project.
-
-Consider formatting this section based on Keep a Changelog, and adhering to Semantic Versioning.
-
-## Notices (optional)
-
-Include a legal disclaimer
-
-**Example:**
 *Customers are responsible for making their own independent assessment of the information in this Guidance. This Guidance: (a) is for informational purposes only, (b) represents AWS current product offerings and practices, which are subject to change without notice, and (c) does not create any commitments or assurances from AWS and its affiliates, suppliers or licensors. AWS products or services are provided “as is” without warranties, representations, or conditions of any kind, whether express or implied. AWS responsibilities and liabilities to its customers are controlled by AWS agreements, and this Guidance is not part of, nor does it modify, any agreement between AWS and its customers.*
 
+## Additional Resources
 
-## Authors (optional)
+AWS Introduction to DevOps Whitepaper:  Infrastructure as Code https://docs.aws.amazon.com/whitepapers/latest/introduction-devops-aws/infrastructure-as-code.html
 
-Name of code contributors
+CloudFormation deployment: https://docs.aws.amazon.com/cli/latest/reference/cloudformation/deploy/index.html
+
+CloudFormation getting started: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/GettingStarted.html
+
+EC2 User Data: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
+
+CloudFormation Metadata Init: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
+
+CloudFormation cfn-init helper script: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-init.html
+
+CloudFormation Intrinsic Function: ForEach: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-foreach.html
+
+Amazon SSM Managed EC2 instance Default Policy: https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSSMManagedEC2InstanceDefaultPolicy.html
+
+Connect to an EC2 instance using SSM and VPC endpoints: https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/connect-to-an-amazon-ec2-instance-by-using-session-manager.html
+
+NDI Netwroking best practises: https://go.ndi.tv/NDI_NetworkingBestPractices 
+
+## Authors
+
+- Andrew Lee, Sr Media Cloud Architect AWS
+- Manuel González, Sr Solutions Architect AWS

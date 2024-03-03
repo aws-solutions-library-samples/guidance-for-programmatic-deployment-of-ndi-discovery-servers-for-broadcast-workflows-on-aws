@@ -1,0 +1,328 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This non-production template creates one or two EC2 instances and downloads
+  and install the NDI Discovery Server on it/them.
+
+  (c) 2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+  This AWS Content is provided subject to the terms of the AWS Customer
+  Agreement available at http://aws.amazon.com/agreement or other written
+  agreement between Customer and either Amazon Web Services, Inc. or Amazon Web
+  Services EMEA SARL or both.
+
+Transform: AWS::LanguageExtensions
+
+Parameters:
+
+  InstanceType:
+    AllowedValues:
+      - t3.micro
+      - t3.medium
+      - other
+    Default: t3.medium
+    Description: Type of the EC2 instance to be deployed.
+    Type: String
+
+  InstanceTypeManual:
+    Description: If the EC2 type was not listed before use this field to add the EC2 instance type you want.
+    Type: String
+
+  VolumeSize:
+    Default: 8
+    Description: Size of the root volume for the EC2 instance (in GB).
+    MinValue: 8
+    Type: Number
+
+  VpcId:
+    Description: VPC Id where the instance will be deployed.
+    Type: AWS::EC2::VPC::Id
+
+  VpcCidr:
+    AllowedPattern: ^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\/(3[0-2]|[1-2][0-9]|[1-9])$
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x.
+    Description: CIDR range of the VPC.
+    Type: String
+
+  SubnetIds:
+    Description: List of subnets to deploy to. An NDI discovery server will be deployed to each selected subnet.
+    Type: List<AWS::EC2::Subnet::Id>
+
+  InstanceName:
+    AllowedPattern: ^[a-zA-Z0-9_-]{1,255}$
+    Default: ndi-discovery
+    Description: Name of the EC2 instance
+    Type: String
+
+  Owner:
+    AllowedPattern: ^[a-zA-Z0-9_-]{1,255}$
+    ConstraintDescription: Must be lower or upper-case alphanumeric or _ and -.
+    Description: Owner of the deployed solution.
+    Type: String
+
+  AmiId:
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: The Id of the AMI to be used for deployment, leave it as default for latest Amazon Linux2.
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+
+  PrivateDnsName:
+    AllowedPattern: ^([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,10})$
+    ConstraintDescription: Must be a valid DNS name.
+    Default: ndi.private
+    Description: Private Domain to use for NDI discovery endpoints. A new private hosted zone will be created.
+    Type: String
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: Instance Configuration
+        Parameters:
+            - InstanceName
+            - VolumeSize
+            - InstanceType
+            - InstanceTypeManual
+            - AmiId
+      -
+        Label:
+          default: VPC Configuration
+        Parameters:
+            - VpcId
+            - VpcCidr
+            - SubnetIds
+      -
+        Label:
+          default: Domain Settings
+        Parameters:
+            - PrivateDnsName
+      -
+        Label:
+          default: Business Tags
+        Parameters:
+            - Owner
+    ParameterLabels:
+      InstanceName:
+        default: Instance Name
+      VolumeSize:
+        default: Volume Size
+      InstanceType:
+        default: Instance Type
+      InstanceTypeManual:
+        default: Instance Type Override
+      AmiId:
+        default: Amazon Machine Image (AMI) ID
+      VpcId:
+        default: VPC ID
+      VpcCidr:
+        default: VPC CIDR Range
+      SubnetIds:
+        default: Subnet IDs
+      PrivateDnsName:
+        default: Private DNS Name
+      Owner:
+        default: Owner
+
+Conditions:
+
+  InstanceTypeDefined:
+    !Not [!Equals [!Ref InstanceType, other]]
+
+Resources:
+
+  IamInstanceProfileRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  NdiInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref IamInstanceProfileRole
+
+  NdiInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Limits traffic to NDI only
+      SecurityGroupIngress:
+        - CidrIp: !Ref VpcCidr
+          IpProtocol: tcp
+          FromPort: 5959
+          ToPort: 5959
+          Description: Only allow NDI traffic from the VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: "HTTP Outbound traffic"
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: "HTTPS Outbound traffic"
+        - CidrIp: !Ref VpcCidr
+          IpProtocol: tcp
+          FromPort: 5959
+          ToPort: 5959
+          Description: Only allow NDI traffic to the VPC  
+      VpcId: !Ref VpcId
+
+  PrivateHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref PrivateDnsName
+      VPCs:
+        - VPCId: !Ref VpcId
+          VPCRegion: !Ref AWS::Region
+
+  Fn::ForEach::DiscoveryInstances:
+    - Subnets
+    - !Ref SubnetIds
+    - 'Instance&{Subnets}':
+        Type: AWS::EC2::Instance
+        Metadata:
+          AWS::CloudFormation::Init:
+            configSets:
+              config:
+                - configInstance
+                - finalize
+            configInstance:
+              files:
+                /etc/systemd/ndi-discovery.service:
+                  content: |
+                    [Unit]
+                    Description=NDI Discovery Service
+
+                    [Service]
+                    ExecStartPre=/bin/sleep 30
+                    User=ec2-user
+                    WorkingDirectory=/home/ec2-user/bin/x86_64-linux-gnu
+                    ExecStart=/home/ec2-user/bin/x86_64-linux-gnu/ndi-directory-service
+                    Restart=always
+
+                    [Install]
+                    WantedBy=multi-user.target
+
+                /tmp/install-ndi-discovery.sh:
+                  content: |
+                    #!/bin/bash -xe
+                    cd /home/ec2-user
+
+                    #Install updates
+                    yum update -y
+
+                    #Download the NDI Linux SDK and extract it and run the install script
+                    wget https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v5_Linux.tar.gz
+                    tar -xzf Install_NDI_SDK_v5_Linux.tar.gz
+                    yes | sudo ./Install_NDI_SDK_v5_Linux.sh
+
+                    #Clean up and prepare directories
+                    rm -f Install_NDI_SDK_v5_Linux.tar.gz
+                    rm -f Install_NDI_SDK_v5_Linux.sh
+                    cp -r 'NDI SDK for Linux'/* ./
+                    rm -r 'NDI SDK for Linux'/
+
+              commands:
+                01-install-ndi-discovery:
+                  command: 'sudo bash /tmp/install-ndi-discovery.sh'
+                02-start-ndi-service:
+                  command: 'sudo systemctl enable /etc/systemd/ndi-discovery.service'
+            finalize:
+              commands:
+                01-signal-resource:
+                  command: !Sub
+                    - |
+                      /opt/aws/bin/cfn-signal -e $? --stack ${StackName} --resource ${Resource} --region ${Region}
+                    - StackName: !Ref 'AWS::StackName'
+                      Region: !Ref 'AWS::Region'
+                      Resource: !Join
+                        - ''
+                        - - Instancesubnet
+                          - Fn::Select:
+                            - 1
+                            - Fn::Split:
+                              - '-'
+                              - !Ref Subnets
+                  waitAfterCompletion: 0
+        Properties:
+          ImageId: !Ref AmiId
+          InstanceType: !If [InstanceTypeDefined, !Ref InstanceType, !Ref InstanceTypeManual]
+          IamInstanceProfile: !Ref NdiInstanceProfile
+          BlockDeviceMappings:
+            - DeviceName: /dev/xvda
+              Ebs:
+                DeleteOnTermination: true
+                VolumeSize: !Ref VolumeSize
+                VolumeType: gp3
+                Encrypted: true
+          DisableApiTermination: true
+          NetworkInterfaces:
+            - DeleteOnTermination: true
+              DeviceIndex: 0
+              GroupSet:
+                - !Ref NdiInstanceSecurityGroup
+              SubnetId: !Sub ${Subnets}
+          UserData:
+            Fn::Base64: !Sub
+              - |
+                #!/bin/bash -xe
+                yum install -y aws-cfn-bootstrap
+                sudo /opt/aws/bin/cfn-init --configsets config -v --stack ${StackName} --resource ${Resource} --region ${Region}
+                sudo reboot
+              - StackName: !Ref 'AWS::StackName'
+                Region: !Ref 'AWS::Region'
+                Resource: !Join
+                  - ''
+                  - - Instancesubnet
+                    - Fn::Select:
+                      - 1
+                      - Fn::Split:
+                        - '-'
+                        - !Ref Subnets
+          Tags:
+            - Key: Name
+              Value: !Sub
+                - ${InstanceName}-${Suffix}
+                - InstanceName: !Ref InstanceName
+                  Suffix: !Sub ${Subnets}
+            - Key: Owner
+              Value: !Ref Owner
+      'Dns&{Subnets}':
+        Type: AWS::Route53::RecordSet
+        Properties:
+          HostedZoneId: !Ref PrivateHostedZone
+          Name: !Sub discovery-${Subnets}.${PrivateDnsName}
+          ResourceRecords:
+            - !GetAtt
+              - Fn::Join:
+                  - ''
+                  - - Instancesubnet
+                    - Fn::Select:
+                      - 1
+                      - Fn::Split:
+                        - '-'
+                        - !Ref Subnets
+              - PrivateIp
+          Type: A
+          TTL: 900
+          Comment: NDI Discovery service
+
+Outputs:
+  Fn::ForEach::DiscoveryInstanceOutputs:
+    - Subnets
+    - !Ref SubnetIds
+    - 'DnsAddress&{Subnets}':
+        Description: !Sub Address of the NDI Discovey Server in subnet ${Subnets}
+        Value: !Sub discovery-${Subnets}.${PrivateDnsName}
