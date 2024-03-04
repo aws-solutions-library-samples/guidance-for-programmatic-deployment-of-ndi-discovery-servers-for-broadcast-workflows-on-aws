@@ -172,6 +172,8 @@ Amazon SSM Managed EC2 instance Default Policy: https://docs.aws.amazon.com/aws-
 
 Connect to an EC2 instance using SSM and VPC endpoints: https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/connect-to-an-amazon-ec2-instance-by-using-session-manager.html
 
+Self Guided Workshop: https://catalog.us-east-1.prod.workshops.aws/workshops/e00c206d-b923-4ba6-9887-6d93d1cc39ca/en-US
+
 NDI Netwroking best practises: https://go.ndi.tv/NDI_NetworkingBestPractices 
 
 ## Authors
