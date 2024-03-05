@@ -75,7 +75,7 @@ Once deployed and as the EC2 instances are not launched with a Key Pair, Systems
 
 ### Operating System
 
-The EC2 instances deployed will use the latest **<Amazon Linux 2 >** AMI available in the region selected for deployment.
+The EC2 instances deployed will use the latest **<Amazon Linux 2023 >** AMI available in the region selected for deployment.
 
 ### Third-party tools
 
