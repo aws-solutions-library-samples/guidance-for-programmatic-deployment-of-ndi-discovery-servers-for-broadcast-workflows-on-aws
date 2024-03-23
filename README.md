@@ -43,7 +43,7 @@ The target audience includes **Broadcast** engineers or individuals with minimal
 
 # Architecture
 
-## CloudFormation deployment:
+## CloudFormation Deployment:
 
 ![Architecture Diagram](assets/architecture1.png "Architecture Diagram")
 
@@ -56,7 +56,7 @@ Target technology stack:
    * One or two EC2 instances
    * A Route 53 hosted zone with the one or two A records  
 
-## Deployed EC2 Instances:
+## Deployed Resources:
 
 ![Architecture Diagram](assets/architecture2.png "Architecture Diagram")
 
