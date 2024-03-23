@@ -2,18 +2,19 @@
 
 ## Table of Content
 
-1. [Overview](#overview-required)
+1. [Overview](#overview)
+    - [Architecture](#Architecture)
     - [Cost](#cost)
-2. [Prerequisites](#prerequisites-required)
-    - [Operating System](#operating-system-required)
-3. [Deployment Steps](#deployment-steps-required)
-4. [Deployment Validation](#deployment-validation-required)
-5. [Running the Guidance](#running-the-guidance-required)
-6. [Next Steps](#next-steps-required)
-7. [Cleanup](#cleanup-required)
-8. [Notices](#notices-optional)
-10. [Additional Resources](#resources-optional)
-10. [Authors](#authors-optional)
+2. [Prerequisites](#prerequisites)
+    - [Operating System](#operating-system)
+3. [Deployment Steps](#deployment-steps)
+4. [Deployment Validation](#deployment-validation)
+5. [Running the Guidance](#running-the-guidance)
+6. [Next Steps](#next-steps)
+7. [Cleanup](#cleanup)
+8. [Notices](#notices)
+10. [Additional Resources](#resources)
+10. [Authors](#authors)
 
 ## Overview 
 
@@ -41,9 +42,9 @@ The Instance Profile role associated to the EC2 instances have an AWS managed po
 
 The target audience includes **Broadcast** engineers or individuals with minimal AWS experience, as the template reduces the need for coding or scripting expertise. This template doesn't require any packaging process (upload local artifcats to an S3 bucket) and the CloudFormation template can easily be re-used and customized for various live production deployments.
 
-# Architecture
+## Architecture
 
-## CloudFormation Deployment:
+### CloudFormation Deployment:
 
 ![Architecture Diagram](assets/architecture1.png "Architecture Diagram")
 
@@ -56,12 +57,12 @@ Target technology stack:
    * One or two EC2 instances
    * A Route 53 hosted zone with the one or two A records  
 
-## Deployed Resources:
+### Deployed Resources:
 
 ![Architecture Diagram](assets/architecture2.png "Architecture Diagram")
 
 
-### Cost
+## Cost
 
 You are responsible for the cost of the AWS services used while running this Guidance. As of Mars 2024, the cost for running this Guidance with the default settings in the US East (N. Virginia) is approximately $31.01 per month (on-demand) for each NDI Discovery Server (based on the t3.medium EC2 instances type) 
 
@@ -179,4 +180,4 @@ NDI Netwroking best practises: https://go.ndi.tv/NDI_NetworkingBestPractices
 ## Authors
 
 - Andrew Lee, Sr Media Cloud Architect AWS
-- Manuel González, Sr Solutions Architect AWS
+- Manuel González, Principal Solutions Architect AWS
