@@ -46,7 +46,7 @@ The target audience includes **Broadcast** engineers or individuals with minimal
 
 ### CloudFormation Deployment:
 
-![Architecture Diagram](assets/architecture.png "Architecture Diagram")
+![Architecture Diagram](assets/architecture-merged.png "Architecture Diagram")
 
 1. The AWS **CloudFormation** Template defines the AWS resources and their configurations. In this first step the Template is used to deploy a **CloudFormation** Stack. 
 2. **CloudFormation** provisions or updates the resources specified in the template..
