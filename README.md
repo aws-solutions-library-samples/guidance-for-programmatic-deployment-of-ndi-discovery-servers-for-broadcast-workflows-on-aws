@@ -18,9 +18,9 @@
 
 ## Overview 
 
-This sample, non-production-ready template describes a CloudFormation template to deploy the NDI DIscovery Servers on an existing VPC.
+This sample, non-production-ready template describes a CloudFormation template to deploy the infraestructure needed to host the NDI DIscovery Servers on an existing VPC.
 
-This pattern is designed for broadcasters requiring swift provisioning and dismantling of NDI environments for live production setups, utilizing the elasticity and flexibility of AWS infrastructure.
+This pattern is designed for broadcast engineers or individuals with minimal AWS experience, and provides a streamlined method for swift provisioning and dismantling of NDI environments for live production setups, leveraging the elasticity and flexibility of AWS infrastructure. utilizing the elasticity and flexibility of AWS infrastructure.
 
 AWS provides services that enable the creation, deployment and maintenance of infrastructure in a programmatic, descriptive, and declarative way and these services provide rigor, clarity, and reliability. AWS CloudFormation enables developers to create AWS resources in an orderly and predictable fashion. Resources are written in template files using JSON or YAML format. Then, CloudFormation reads the template and generates the stacks, that are deployed in a safe, repeatable manner.
 
@@ -73,7 +73,7 @@ The EC2 instances deployed will use the latest **<Amazon Linux 2023 >** AMI avai
 
 ### Third-party tools
 
-The EC2 instances will download and install the NDI SDK for Linux from the url: https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v5_Linux.tar.gz
+The EC2 instances will download and install the NDI SDK for Linux from the url: https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v6_Linux.tar.gz
 
 ### AWS account requirements
 
