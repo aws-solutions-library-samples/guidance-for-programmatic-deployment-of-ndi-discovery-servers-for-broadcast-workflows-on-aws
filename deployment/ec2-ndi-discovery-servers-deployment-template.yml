@@ -224,13 +224,13 @@ Resources:
                     yum update -y
 
                     #Download the NDI Linux SDK and extract it and run the install script
-                    wget https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v5_Linux.tar.gz
-                    tar -xzf Install_NDI_SDK_v5_Linux.tar.gz
-                    yes | sudo ./Install_NDI_SDK_v5_Linux.sh
+                    wget https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v6_Linux.tar.gz
+                    tar -xzf Install_NDI_SDK_v6_Linux.tar.gz
+                    yes | sudo ./Install_NDI_SDK_v6_Linux.sh
 
                     #Clean up and prepare directories
-                    rm -f Install_NDI_SDK_v5_Linux.tar.gz
-                    rm -f Install_NDI_SDK_v5_Linux.sh
+                    rm -f Install_NDI_SDK_v6_Linux.tar.gz
+                    rm -f Install_NDI_SDK_v6_Linux.sh
                     cp -r 'NDI SDK for Linux'/* ./
                     rm -r 'NDI SDK for Linux'/
 
