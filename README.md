@@ -46,21 +46,14 @@ The target audience includes **Broadcast** engineers or individuals with minimal
 
 ### CloudFormation Deployment:
 
-![Architecture Diagram](assets/architecture1.png "Architecture Diagram")
+![Architecture Diagram](assets/architecture.png "Architecture Diagram")
 
-Target technology stack:
-
-   * An Instance Profile 
-       - An IAM Policy
-       - An IAM Role 
-   * A Security Group 
-   * One or two EC2 instances
-   * A Route 53 hosted zone with the one or two A records  
-
-### Deployed Resources:
-
-![Architecture Diagram](assets/architecture2.png "Architecture Diagram")
-
+1. The AWS **CloudFormation** Template defines the AWS resources and their configurations. In this first step the Template is used to deploy a **CloudFormation** Stack. 
+2. **CloudFormation** provisions or updates the resources specified in the template..
+3. **CloudFormation** creates an **AWS Identity and Access Management (IAM)** Instance Profile. An Instance Profile is a container that passes an **IAM** role to an **Amazon Elastic Compute Cloud Instances (EC2)** instance. It defines the permissions that the **EC2** instance will have when interacting with other AWS services. The Instance Profile includes an **IAM** role and an **IAM** policy that specify the allowed actions and resources.
+4. **CloudFormation** creates a security group, which acts as a virtual firewall that controls inbound and outbound traffic to **EC2** instances. 
+5. **CloudFormation** creates two **EC2** instances, one in the private subnet 1 within Availability Zone 1, and another in the private subnet 2 within Availability Zone 2. These **EC2** instances use the Instance Profile from Step 3 and the security group from Step 4. They host the **NDI Discovery Server** application installed during the launch process.  
+6. **CloudFormation** creates a private **Amazon Route 53** Hosted Zone with the A records for the two **EC2** Instances for managing DNS and routing traffic.
 
 ## Cost
 
