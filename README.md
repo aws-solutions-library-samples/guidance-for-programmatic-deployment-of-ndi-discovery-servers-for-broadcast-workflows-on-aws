@@ -73,7 +73,11 @@ The EC2 instances deployed will use the latest **<Amazon Linux 2023 >** AMI avai
 
 ### Third-party tools
 
-The EC2 instances will download and install the NDI SDK for Linux from the url: https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v6_Linux.tar.gz
+The EC2 instances will download and install the NDI SDK for Linux hosted in the ndi.tv domain.
+
+The Discovery Server application is part of the NDI SDK and needs to accept the following NDI licence agreement that can be found here: https://downloads.ndi.tv/SDK/NDI_SDK/NDI%20License%20Agreement.pdf
+
+The SDK can be downloaded after succesfully registering using the following url: https://ndi.video/for-developers/ndi-sdk/download/ 
 
 ### AWS account requirements
 
@@ -166,7 +170,9 @@ Amazon SSM Managed EC2 instance Default Policy: https://docs.aws.amazon.com/aws-
 
 Connect to an EC2 instance using SSM and VPC endpoints: https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/connect-to-an-amazon-ec2-instance-by-using-session-manager.html
 
-Self Guided Workshop: https://catalog.us-east-1.prod.workshops.aws/workshops/e00c206d-b923-4ba6-9887-6d93d1cc39ca/en-US
+Using NDI on AWS blogpost: https://aws.amazon.com/blogs/media/using-ndi-for-video-switching-and-routing-in-aws-2/  
+
+Self Guided NDI Workshop on AWS: https://catalog.us-east-1.prod.workshops.aws/workshops/e00c206d-b923-4ba6-9887-6d93d1cc39ca/en-US
 
 NDI Netwroking best practises: https://go.ndi.tv/NDI_NetworkingBestPractices 
 
