@@ -2,14 +2,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   This non-production template creates one or two EC2 instances and downloads
-  and install the NDI Discovery Server on it/them as described in the AWS solution guidance (SO9433).
+  and install the NDI Discovery Server on it/them as described in the AWS solution guidance (SO9433) (uksb-1tupboc64).
 
   (c) 2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
   This AWS Content is provided subject to the terms of the AWS Customer
   Agreement available at http://aws.amazon.com/agreement or other written
   agreement between Customer and either Amazon Web Services, Inc. or Amazon Web
   Services EMEA SARL or both.
-
+  
 Transform: AWS::LanguageExtensions
 
 Parameters:
