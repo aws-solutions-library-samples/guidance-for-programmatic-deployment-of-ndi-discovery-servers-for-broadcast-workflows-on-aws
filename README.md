@@ -73,11 +73,12 @@ The EC2 instances deployed will use the latest **<Amazon Linux 2023 >** AMI avai
 
 ### Third-party tools
 
-The EC2 instances will download and install the NDI SDK for Linux hosted in the ndi.tv domain.
+The EC2 instances will download and install the NDI SDK for Linux hosted in the ndi.video domain.
 
-The Discovery Server application is part of the NDI SDK and needs to accept the following NDI licence agreement that can be found here: https://downloads.ndi.tv/SDK/NDI_SDK/NDI%20License%20Agreement.pdf
+The Discovery Server application is part of the NDI SDK and you agree to accept the following NDI license agreement  by using this template
+The text of the license that you are agreeing to  can be found here: https://downloads.ndi.tv/SDK/NDI_SDK/NDI%20License%20Agreement.pdf
 
-The SDK can be downloaded after succesfully registering using the following url: https://ndi.video/for-developers/ndi-sdk/download/ 
+The SDK can be downloaded after successfully registering using the following url: https://ndi.video/for-developers/ndi-sdk/download/
 
 ### AWS account requirements
 
