@@ -209,7 +209,7 @@ Resources:
                     ExecStartPre=/bin/sleep 30
                     User=ec2-user
                     WorkingDirectory=/home/ec2-user/bin/x86_64-linux-gnu
-                    ExecStart=/home/ec2-user/bin/x86_64-linux-gnu/ndi-directory-service
+                    ExecStart=/home/ec2-user/bin/x86_64-linux-gnu/ndi-discovery-server
                     Restart=always
 
                     [Install]
