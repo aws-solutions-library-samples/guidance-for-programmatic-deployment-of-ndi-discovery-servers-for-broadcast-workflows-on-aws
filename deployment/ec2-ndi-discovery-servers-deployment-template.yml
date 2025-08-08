@@ -224,21 +224,24 @@ Resources:
                     yum update -y
 
                     #Download the NDI Linux SDK and extract it and run the install script
-                    wget https://downloads.ndi.tv/SDK/NDI_SDK_Linux/Install_NDI_SDK_v6_Linux.tar.gz
-                    tar -xzf Install_NDI_SDK_v6_Linux.tar.gz
-                    yes | sudo ./Install_NDI_SDK_v6_Linux.sh
+                    wget https://downloads.ndi.tv/Tools/NDI%20Discovery%20Server/Linux/Install_NDI_Discovery_Server_v6.tar.gz
+                    tar -xzf Install_NDI_Discovery_Server_v6.tar.gz
+                    yes | sudo ./Install_NDI_Discovery_Server_v6.sh
 
                     #Clean up and prepare directories
-                    rm -f Install_NDI_SDK_v6_Linux.tar.gz
-                    rm -f Install_NDI_SDK_v6_Linux.sh
-                    cp -r 'NDI SDK for Linux'/* ./
-                    rm -r 'NDI SDK for Linux'/
-
+                    rm -f Install_NDI_Discovery_Server_v6.tar.gz
+                    rm -f Install_NDI_Discovery_Server_v6.sh
+                    cp -r 'Install_NDI_Discovery_Server_v6'/* ./
+                    rm -r 'Install_NDI_Discovery_Server_v6'/
               commands:
+                00-fix-ulimits:
+                  command: "sed -i 's/#DefaultLimitNOFILE=1024:524288/DefaultLimitNOFILE=65535:524288/g' /etc/systemd/system.conf"
                 01-install-ndi-discovery:
                   command: 'sudo bash /tmp/install-ndi-discovery.sh'
                 02-start-ndi-service:
                   command: 'sudo systemctl enable /etc/systemd/ndi-discovery.service'
+                03-reboot:
+                  command: 'reboot'
             finalize:
               commands:
                 01-signal-resource:
